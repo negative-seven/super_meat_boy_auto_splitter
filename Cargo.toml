@@ -1,0 +1,44 @@
+[package]
+name = "super_meat_boy_auto_splitter"
+version = "0.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+lto = true
+panic = "abort"
+codegen-units = 1
+strip = true
+
+[profile.release.build-override]
+opt-level = 0
+
+[dependencies]
+asr = { git = "https://github.com/LiveSplit/asr", features = [
+    "derive",
+    "float-vars",
+    "integer-vars",
+] }
+bytemuck = "1.23.1"
+
+[lints.rust]
+absolute_paths_not_starting_with_crate = "warn"
+keyword_idents = "warn"
+let_underscore_drop = "warn"
+non_ascii_idents = "warn"
+trivial_numeric_casts = "warn"
+unit_bindings = "warn"
+unreachable_pub = "warn"
+unsafe_op_in_unsafe_fn = "warn"
+unused_extern_crates = "warn"
+unused_import_braces = "warn"
+unused_lifetimes = "warn"
+unused_macro_rules = "warn"
+unused_qualifications = "warn"
+
+[lints.clippy]
+allow_attributes = "warn"
+struct_excessive_bools = "allow"
+pedantic = { level = "warn", priority = -1 }
