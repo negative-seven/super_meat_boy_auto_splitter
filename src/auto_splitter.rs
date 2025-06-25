@@ -117,11 +117,6 @@ impl<'settings> AutoSplitter<'settings> {
     }
 
     fn reset(&self) -> bool {
-        // Exiting game (only works if exiting through "Exit Game")
-        if self.process.exit.current == 1 {
-            return true;
-        }
-
         // On the title screen
         if self.process.ui_state.current == 11 {
             return true;
