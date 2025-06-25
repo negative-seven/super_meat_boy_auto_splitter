@@ -10,7 +10,6 @@ pub(crate) struct SmbProcess {
     pub not_in_cutscene: Pair<u8>,
     pub in_special_level: Pair<u8>,
     pub level_beaten: Pair<u8>,
-    pub fetus_type: Pair<u8>,
     pub death_count: Pair<i32>,
     pub characters: Pair<i32>,
     pub level: Pair<u8>,
@@ -45,7 +44,6 @@ impl SmbProcess {
             not_in_cutscene: Pair::default(),
             in_special_level: Pair::default(),
             level_beaten: Pair::default(),
-            fetus_type: Pair::default(),
             death_count: Pair::default(),
             characters: Pair::default(),
             level: Pair::default(),
@@ -83,7 +81,6 @@ impl SmbProcess {
         update!(not_in_cutscene);
         update!(in_special_level);
         update!(level_beaten);
-        update!(fetus_type);
         update!(death_count);
         update!(characters);
         update!(level);
@@ -101,7 +98,6 @@ struct PointerPaths {
     not_in_cutscene: DeepPointer<8>,
     in_special_level: DeepPointer<8>,
     level_beaten: DeepPointer<8>,
-    fetus_type: DeepPointer<8>,
     death_count: DeepPointer<8>,
     characters: DeepPointer<8>,
     level: DeepPointer<8>,
@@ -129,11 +125,6 @@ impl PointerPaths {
                 &[0x2d_4c6c, 0x3a4],
             ),
             level_beaten: DeepPointer::new(main_module_address, PointerSize::Bit32, &[0x2d_54a0]),
-            fetus_type: DeepPointer::new(
-                main_module_address,
-                PointerSize::Bit32,
-                &[0x2d_54bc, 0x2d2],
-            ),
             death_count: DeepPointer::new(
                 main_module_address,
                 PointerSize::Bit32,
@@ -181,11 +172,6 @@ impl PointerPaths {
                 &[0x30_999c, 0x3a4],
             ),
             level_beaten: DeepPointer::new(main_module_address, PointerSize::Bit32, &[0x30_a1e0]),
-            fetus_type: DeepPointer::new(
-                main_module_address,
-                PointerSize::Bit32,
-                &[0x30_a1a0, 0x352],
-            ),
             death_count: DeepPointer::new(
                 main_module_address,
                 PointerSize::Bit32,
@@ -233,11 +219,6 @@ impl PointerPaths {
                 &[0x41_9de0, 0x460],
             ),
             level_beaten: DeepPointer::new(main_module_address, PointerSize::Bit64, &[0x41_c740]),
-            fetus_type: DeepPointer::new(
-                main_module_address,
-                PointerSize::Bit64,
-                &[0x41_9c40, 0x1ce4],
-            ),
             death_count: DeepPointer::new(
                 main_module_address,
                 PointerSize::Bit64,

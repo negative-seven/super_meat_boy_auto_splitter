@@ -142,7 +142,7 @@ impl<'settings> AutoSplitter<'settings> {
 
         // Final cutscene splits
         if self.process.fetus.changed_to(&0x8000_0000)
-            && (!(self.process.fetus_type.current == 0 && self.settings.dark_ending)
+            && (!(self.process.level_type.current == 0 && self.settings.dark_ending)
                 || self.settings.split_after_level)
         {
             return true;
