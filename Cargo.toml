@@ -1,6 +1,6 @@
 [package]
 name = "super_meat_boy_auto_splitter"
-version = "0.0.0"
+version = "0.0.1"
 edition = "2021"
 
 [lib]
