@@ -1,4 +1,7 @@
-use crate::{smb_process::SmbProcess, Settings};
+use crate::{
+    smb_process::{GameState, SmbProcess},
+    Settings,
+};
 use asr::{settings::Gui, timer::TimerState};
 use core::f32;
 
@@ -118,12 +121,14 @@ impl<'settings> AutoSplitter<'settings> {
 
     fn reset(&self) -> bool {
         // On the title screen
-        if self.process.ui_state.current == 11 {
+        if self.process.game_state.current == GameState::TitleScreen {
             return true;
         }
 
         // On the main menu
-        if self.settings.reset_on_main_menu && self.process.ui_state.current == 15 {
+        if self.settings.reset_on_main_menu
+            && self.process.game_state.current == GameState::MainMenu
+        {
             return true;
         }
 
@@ -132,7 +137,7 @@ impl<'settings> AutoSplitter<'settings> {
 
     fn split(&self) -> bool {
         // Boss completion splits
-        if self.process.ui_state.current == 0
+        if self.process.game_state.current == GameState::Playing
             && self.process.not_in_cutscene.changed_from_to(&1, &0)
             && (self.process.world.current != 6 || self.settings.split_after_level)
             && self.process.level.current == 99
@@ -155,13 +160,13 @@ impl<'settings> AutoSplitter<'settings> {
             }
 
             if self.process.level_transition.changed_from_to(&0, &1)
-                && self.process.ui_state.current == 0
+                && self.process.game_state.current == GameState::Playing
                 && (self.level_time != Self::DUMMY_LEVEL_TIME || self.process.playing.old == 0)
             {
                 return true;
             }
 
-            if self.process.ui_state.current == 0
+            if self.process.game_state.current == GameState::Playing
                 && ([0, 1].contains(&self.process.level_type.old))
                 && (2..=5).contains(&self.process.level_type.current)
             {
@@ -189,7 +194,7 @@ impl<'settings> AutoSplitter<'settings> {
 
         // Boss entrance split
         if split_before_boss
-            && self.process.ui_state.current == 7
+            && self.process.game_state.current == GameState::EnteringLevel
             && self.process.in_special_level.changed_from_to(&0, &1)
         {
             return true;
@@ -209,7 +214,10 @@ impl<'settings> AutoSplitter<'settings> {
         // Dark Ending splits
         if self.settings.dark_ending
             && !self.settings.split_after_level
-            && self.process.ui_state.changed_from_to(&0, &22)
+            && self.process.game_state.changed_from_to(
+                &GameState::Playing,
+                &GameState::LevelSelectionWithBossUnlocking,
+            )
             && (1..=5).contains(&self.process.world.current)
         {
             return true;
@@ -219,16 +227,24 @@ impl<'settings> AutoSplitter<'settings> {
     }
 
     fn start(&self) -> bool {
-        if !self.settings.iw_mode && self.process.ui_state.current == 13 {
+        if !self.settings.iw_mode
+            && self.process.game_state.current == GameState::EnteringChapterSelection
+        {
             return true;
         }
 
         if self.settings.iw_mode
             && ((self.process.characters.current != 1
-                && self.process.ui_state.changed_from_to(&4, &5))
+                && self.process.game_state.changed_from_to(
+                    &GameState::CharacterSelection,
+                    &GameState::CharacterSelectionWithCharacterSelected,
+                ))
                 || ((self.process.characters.current == 1
                     || ([6, 7].contains(&self.process.world.current)))
-                    && self.process.ui_state.changed_from_to(&1, &7)))
+                    && self
+                        .process
+                        .game_state
+                        .changed_from_to(&GameState::LevelSelection, &GameState::EnteringLevel)))
             && (self.process.level.current == 0 || !self.settings.iw_mode_split_on_first_level)
         {
             return true;

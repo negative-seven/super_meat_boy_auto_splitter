@@ -21,7 +21,7 @@ asr = { git = "https://github.com/LiveSplit/asr", features = [
     "float-vars",
     "integer-vars",
 ] }
-bytemuck = "1.23.1"
+bytemuck = { version = "1.23.1", features = ["derive"] }
 
 [lints.rust]
 absolute_paths_not_starting_with_crate = "warn"

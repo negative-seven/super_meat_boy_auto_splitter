@@ -13,7 +13,7 @@ pub(crate) struct SmbProcess {
     pub death_count: Pair<i32>,
     pub characters: Pair<i32>,
     pub level: Pair<u8>,
-    pub ui_state: Pair<u8>,
+    pub game_state: Pair<GameState>,
     pub level_transition: Pair<u8>,
     pub fetus: Pair<u32>,
     pub level_type: Pair<i32>,
@@ -47,7 +47,10 @@ impl SmbProcess {
             death_count: Pair::default(),
             characters: Pair::default(),
             level: Pair::default(),
-            ui_state: Pair::default(),
+            game_state: Pair {
+                old: GameState::TitleScreen,
+                current: GameState::TitleScreen,
+            },
             level_transition: Pair::default(),
             fetus: Pair::default(),
             level_type: Pair::default(),
@@ -61,7 +64,7 @@ impl SmbProcess {
     pub(crate) fn update_values(&mut self) {
         fn update<T>(process: &Process, field: &mut Pair<T>, pointer_path: DeepPointer<8>)
         where
-            T: Copy + bytemuck::Pod,
+            T: bytemuck::CheckedBitPattern,
         {
             if let Ok(value) = pointer_path.deref(process) {
                 field.old = field.current;
@@ -84,11 +87,26 @@ impl SmbProcess {
         update!(death_count);
         update!(characters);
         update!(level);
-        update!(ui_state);
+        update!(game_state);
         update!(level_transition);
         update!(fetus);
         update!(level_type);
     }
+}
+
+#[non_exhaustive]
+#[repr(u32)]
+#[derive(bytemuck::CheckedBitPattern, Clone, Copy, Eq, PartialEq)]
+pub(crate) enum GameState {
+    Playing = 0,
+    LevelSelection = 1,
+    CharacterSelection = 4,
+    CharacterSelectionWithCharacterSelected = 5,
+    EnteringLevel = 7,
+    TitleScreen = 11,
+    EnteringChapterSelection = 13,
+    MainMenu = 15,
+    LevelSelectionWithBossUnlocking = 22,
 }
 
 struct PointerPaths {
@@ -101,7 +119,7 @@ struct PointerPaths {
     death_count: DeepPointer<8>,
     characters: DeepPointer<8>,
     level: DeepPointer<8>,
-    ui_state: DeepPointer<8>,
+    game_state: DeepPointer<8>,
     level_transition: DeepPointer<8>,
     fetus: DeepPointer<8>,
     level_type: DeepPointer<8>,
@@ -136,7 +154,7 @@ impl PointerPaths {
                 &[0x2d_55ac, 0x1d24],
             ),
             level: DeepPointer::new(main_module_address, PointerSize::Bit32, &[0x2d_5ea0, 0x8d0]),
-            ui_state: DeepPointer::new(
+            game_state: DeepPointer::new(
                 main_module_address,
                 PointerSize::Bit32,
                 &[0x2d_5ea0, 0x8d4],
@@ -183,7 +201,7 @@ impl PointerPaths {
                 &[0x30_a380, 0x3950],
             ),
             level: DeepPointer::new(main_module_address, PointerSize::Bit32, &[0x30_ac90, 0x8dc]),
-            ui_state: DeepPointer::new(
+            game_state: DeepPointer::new(
                 main_module_address,
                 PointerSize::Bit32,
                 &[0x30_ac90, 0x8e0],
@@ -230,7 +248,7 @@ impl PointerPaths {
                 &[0x41_9c40, 0x1d68],
             ),
             level: DeepPointer::new(main_module_address, PointerSize::Bit64, &[0x41_bf10, 0xd00]),
-            ui_state: DeepPointer::new(
+            game_state: DeepPointer::new(
                 main_module_address,
                 PointerSize::Bit64,
                 &[0x41_bf10, 0xd04],
