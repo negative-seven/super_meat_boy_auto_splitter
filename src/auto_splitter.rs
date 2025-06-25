@@ -83,11 +83,8 @@ impl<'settings> AutoSplitter<'settings> {
 
     fn update(&mut self) {
         // Update the death counter
-        if self.settings.death_counter
-            && self.process.death_count.increased()
-            && (asr::timer::state() != TimerState::Ended
-                || !self.settings.freeze_death_counter_on_finish)
-        {
+
+        if self.is_death_counter_active() && self.process.death_count.increased() {
             asr::timer::set_variable_int(
                 "Deaths",
                 self.process.death_count.current - self.death_count_offset,
@@ -96,17 +93,21 @@ impl<'settings> AutoSplitter<'settings> {
 
         // Update the level time display. The level time stays at
         // `Self::DUMMY_LEVEL_TIME` while playing the level.
-        if self.settings.level_time
-            && self.process.level_time.old == Self::DUMMY_LEVEL_TIME
-            && self.process.level_time.current != Self::DUMMY_LEVEL_TIME
+        if self.is_level_time_display_active()
+            && self
+                .process
+                .level_time
+                .bytes_changed_from(&Self::DUMMY_LEVEL_TIME)
         {
             // The timer glitch may cause the level time to be 0.0 here.
             asr::timer::set_variable_float("Last IL Time", self.process.level_time.current);
         }
 
         // Update the level time
-        if self.process.level_time.old == Self::DUMMY_LEVEL_TIME
-            && self.process.level_time.current != Self::DUMMY_LEVEL_TIME
+        if self
+            .process
+            .level_time
+            .bytes_changed_from(&Self::DUMMY_LEVEL_TIME)
         {
             self.level_time = self.process.level_time.current;
         }
@@ -120,12 +121,10 @@ impl<'settings> AutoSplitter<'settings> {
     }
 
     fn reset(&self) -> bool {
-        // On the title screen
         if self.process.game_state.current == GameState::TitleScreen {
             return true;
         }
 
-        // On the main menu
         if self.settings.reset_on_main_menu
             && self.process.game_state.current == GameState::MainMenu
         {
@@ -182,18 +181,8 @@ impl<'settings> AutoSplitter<'settings> {
             }
         }
 
-        let split_before_boss = match self.process.world.current {
-            1 => self.settings.split_before_boss_1,
-            2 => self.settings.split_before_boss_2,
-            3 => self.settings.split_before_boss_3,
-            4 => self.settings.split_before_boss_4,
-            5 => self.settings.split_before_boss_5,
-            6 => self.settings.split_before_boss_6,
-            _ => false,
-        };
-
         // Boss entrance split
-        if split_before_boss
+        if self.settings.split_before_boss(self.process.world.current)
             && self.process.game_state.current == GameState::EnteringLevel
             && self.process.in_special_level.changed_from_to(&0, &1)
         {
@@ -251,5 +240,22 @@ impl<'settings> AutoSplitter<'settings> {
         }
 
         false
+    }
+
+    fn is_death_counter_active(&self) -> bool {
+        if !self.settings.death_counter {
+            return false;
+        }
+
+        if self.settings.freeze_death_counter_on_finish && asr::timer::state() == TimerState::Ended
+        {
+            return false;
+        }
+
+        true
+    }
+
+    fn is_level_time_display_active(&self) -> bool {
+        self.settings.level_time
     }
 }

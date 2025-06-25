@@ -68,6 +68,20 @@ struct Settings {
     level_time: bool,
 }
 
+impl Settings {
+    pub(crate) fn split_before_boss(&self, boss_index: u8) -> bool {
+        match boss_index {
+            1 => self.split_before_boss_1,
+            2 => self.split_before_boss_2,
+            3 => self.split_before_boss_3,
+            4 => self.split_before_boss_4,
+            5 => self.split_before_boss_5,
+            6 => self.split_before_boss_6,
+            _ => false,
+        }
+    }
+}
+
 async fn main() {
     inner_main().await.unwrap();
 }
