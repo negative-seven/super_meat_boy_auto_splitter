@@ -22,11 +22,16 @@ pub(crate) struct SmbProcess {
 
 impl SmbProcess {
     pub(crate) fn try_attach() -> Option<Self> {
-        let process = Process::attach("SuperMeatBoy.exe")?;
+        let process =
+            Process::attach("SuperMeatBoy.exe").or_else(|| Process::attach("SuperMeatBoy"))?;
 
-        let pointer_paths = match process.get_module_size("SuperMeatBoy.exe") {
+        let main_module_size = process
+            .get_module_size("SuperMeatBoy.exe")
+            .or_else(|_| process.get_module_size("SuperMeatBoy"));
+        let pointer_paths = match main_module_size {
             Ok(0x34_2000) => PointerPaths::og_version(&process),
             Ok(0x33_c000) => PointerPaths::v125(&process),
+            Ok(0x21_9000) => PointerPaths::linux_amd64(&process),
             _ => return None,
         }
         .unwrap();
@@ -207,6 +212,58 @@ impl PointerPaths {
                 main_module_address,
                 PointerSize::Bit32,
                 &[0x30_a1a0, 0x3c68],
+            ),
+        })
+    }
+
+    pub(crate) fn linux_amd64(process: &Process) -> Result<Self, Error> {
+        let main_module_address = process.get_module_address("SuperMeatBoy")?;
+        Ok(Self {
+            playing: DeepPointer::new(main_module_address, PointerSize::Bit64, &[0x41_c800]),
+            level_time: DeepPointer::new(main_module_address, PointerSize::Bit64, &[0x41_9c34]),
+            world: DeepPointer::new(main_module_address, PointerSize::Bit64, &[0x41_70e0]),
+            not_in_cutscene: DeepPointer::new(
+                main_module_address,
+                PointerSize::Bit64,
+                &[0x41_9de0, 0x454],
+            ),
+            in_special_level: DeepPointer::new(
+                main_module_address,
+                PointerSize::Bit64,
+                &[0x41_9de0, 0x460],
+            ),
+            level_beaten: DeepPointer::new(main_module_address, PointerSize::Bit64, &[0x41_c740]),
+            fetus_type: DeepPointer::new(
+                main_module_address,
+                PointerSize::Bit64,
+                &[0x41_9c40, 0x1ce4],
+            ),
+            death_count: DeepPointer::new(
+                main_module_address,
+                PointerSize::Bit64,
+                &[0x41_9c40, 0x1cd0],
+            ),
+            characters: DeepPointer::new(
+                main_module_address,
+                PointerSize::Bit64,
+                &[0x41_9c40, 0x1d68],
+            ),
+            level: DeepPointer::new(main_module_address, PointerSize::Bit64, &[0x41_bf10, 0xd00]),
+            ui_state: DeepPointer::new(
+                main_module_address,
+                PointerSize::Bit64,
+                &[0x41_bf10, 0xd04],
+            ),
+            level_transition: DeepPointer::new(
+                main_module_address,
+                PointerSize::Bit64,
+                &[0x41_bf00],
+            ),
+            fetus: DeepPointer::new(main_module_address, PointerSize::Bit64, &[0x41_98a0, 0x170]),
+            level_type: DeepPointer::new(
+                main_module_address,
+                PointerSize::Bit64,
+                &[0x41_9c40, 0x1ce4],
             ),
         })
     }
