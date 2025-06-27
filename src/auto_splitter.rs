@@ -69,10 +69,10 @@ impl<'settings> AutoSplitter<'settings> {
     }
 
     fn init(&mut self) {
-        asr::timer::set_variable_int("Deaths", self.process.death_count.current);
+        Self::set_death_count_variable(self.process.death_count.current);
         self.death_count_offset = 0;
 
-        asr::timer::set_variable_float("Last IL Time", 0.0);
+        Self::set_level_time_variable(0.0);
 
         // In 1.2.5 watching a replay still counts as playing (playing == 1), because of
         // that exiting to the map after completing the level doesn't split
@@ -87,8 +87,7 @@ impl<'settings> AutoSplitter<'settings> {
     fn update(&mut self) {
         // Update the death counter
         if !self.is_death_counter_frozen() && self.process.death_count.increased() {
-            asr::timer::set_variable_int(
-                "Deaths",
+            Self::set_death_count_variable(
                 self.process.death_count.current - self.death_count_offset,
             );
         }
@@ -101,7 +100,7 @@ impl<'settings> AutoSplitter<'settings> {
             .bytes_changed_from(&Self::DUMMY_LEVEL_TIME)
         {
             // The timer glitch may cause the level time to be 0.0 here.
-            asr::timer::set_variable_float("Last IL Time", self.process.level_time.current);
+            Self::set_level_time_variable(self.process.level_time.current);
         }
 
         // Update the level time
@@ -245,13 +244,18 @@ impl<'settings> AutoSplitter<'settings> {
 
     fn on_start(&mut self) {
         self.death_count_offset = self.process.death_count.old;
-        asr::timer::set_variable_int(
-            "Deaths",
-            self.process.death_count.current - self.death_count_offset,
-        );
+        Self::set_death_count_variable(self.process.death_count.current - self.death_count_offset);
     }
 
     fn is_death_counter_frozen(&self) -> bool {
         self.settings.freeze_death_counter_on_finish && asr::timer::state() == TimerState::Ended
+    }
+
+    fn set_death_count_variable(value: impl asr::itoa::Integer) {
+        asr::timer::set_variable_int("deaths", value);
+    }
+
+    fn set_level_time_variable(value: impl asr::ryu::Float) {
+        asr::timer::set_variable_float("level_time", value);
     }
 }
