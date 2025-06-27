@@ -36,7 +36,11 @@ impl<'settings> AutoSplitter<'settings> {
 
         self.update();
 
-        if self.reset() {
+        if matches!(
+            asr::timer::state(),
+            TimerState::Running | TimerState::Paused
+        ) && self.reset()
+        {
             asr::timer::reset();
             return;
         }
