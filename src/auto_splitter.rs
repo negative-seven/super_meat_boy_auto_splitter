@@ -72,9 +72,7 @@ impl<'settings> AutoSplitter<'settings> {
         asr::timer::set_variable_int("Deaths", self.process.death_count.current);
         self.death_count_offset = 0;
 
-        if self.settings.level_time {
-            asr::timer::set_variable_float("Last IL Time", 0.0);
-        }
+        asr::timer::set_variable_float("Last IL Time", 0.0);
 
         // In 1.2.5 watching a replay still counts as playing (playing == 1), because of
         // that exiting to the map after completing the level doesn't split
@@ -97,11 +95,10 @@ impl<'settings> AutoSplitter<'settings> {
 
         // Update the level time display. The level time stays at
         // `Self::DUMMY_LEVEL_TIME` while playing the level.
-        if self.is_level_time_display_active()
-            && self
-                .process
-                .level_time
-                .bytes_changed_from(&Self::DUMMY_LEVEL_TIME)
+        if self
+            .process
+            .level_time
+            .bytes_changed_from(&Self::DUMMY_LEVEL_TIME)
         {
             // The timer glitch may cause the level time to be 0.0 here.
             asr::timer::set_variable_float("Last IL Time", self.process.level_time.current);
@@ -256,9 +253,5 @@ impl<'settings> AutoSplitter<'settings> {
 
     fn is_death_counter_frozen(&self) -> bool {
         self.settings.freeze_death_counter_on_finish && asr::timer::state() == TimerState::Ended
-    }
-
-    fn is_level_time_display_active(&self) -> bool {
-        self.settings.level_time
     }
 }

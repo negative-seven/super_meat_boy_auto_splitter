@@ -58,10 +58,6 @@ struct Settings {
     /// Freeze the death counter when the run ends
     #[default = false]
     freeze_death_counter_on_finish: bool,
-
-    /// Last IL time display
-    #[default]
-    level_time: bool,
 }
 
 impl Settings {
