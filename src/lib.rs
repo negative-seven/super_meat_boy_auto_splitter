@@ -55,10 +55,6 @@ struct Settings {
     #[default = false]
     split_before_boss_6: bool,
 
-    /// Death count display
-    #[default = false]
-    death_counter: bool,
-
     /// Freeze the death counter when the run ends
     #[default = false]
     freeze_death_counter_on_finish: bool,

@@ -69,10 +69,8 @@ impl<'settings> AutoSplitter<'settings> {
     }
 
     fn init(&mut self) {
-        if self.settings.death_counter {
-            asr::timer::set_variable_int("Deaths", self.process.death_count.current);
-            self.death_count_offset = 0;
-        }
+        asr::timer::set_variable_int("Deaths", self.process.death_count.current);
+        self.death_count_offset = 0;
 
         if self.settings.level_time {
             asr::timer::set_variable_float("Last IL Time", 0.0);
@@ -90,8 +88,7 @@ impl<'settings> AutoSplitter<'settings> {
 
     fn update(&mut self) {
         // Update the death counter
-
-        if self.is_death_counter_active() && self.process.death_count.increased() {
+        if !self.is_death_counter_frozen() && self.process.death_count.increased() {
             asr::timer::set_variable_int(
                 "Deaths",
                 self.process.death_count.current - self.death_count_offset,
@@ -250,26 +247,15 @@ impl<'settings> AutoSplitter<'settings> {
     }
 
     fn on_start(&mut self) {
-        if self.settings.death_counter {
-            self.death_count_offset = self.process.death_count.old;
-            asr::timer::set_variable_int(
-                "Deaths",
-                self.process.death_count.current - self.death_count_offset,
-            );
-        }
+        self.death_count_offset = self.process.death_count.old;
+        asr::timer::set_variable_int(
+            "Deaths",
+            self.process.death_count.current - self.death_count_offset,
+        );
     }
 
-    fn is_death_counter_active(&self) -> bool {
-        if !self.settings.death_counter {
-            return false;
-        }
-
-        if self.settings.freeze_death_counter_on_finish && asr::timer::state() == TimerState::Ended
-        {
-            return false;
-        }
-
-        true
+    fn is_death_counter_frozen(&self) -> bool {
+        self.settings.freeze_death_counter_on_finish && asr::timer::state() == TimerState::Ended
     }
 
     fn is_level_time_display_active(&self) -> bool {
