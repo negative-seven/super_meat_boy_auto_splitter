@@ -49,18 +49,18 @@ impl<'settings> AutoSplitter<'settings> {
             asr::timer::split();
         }
 
-        if asr::timer::state() == TimerState::NotRunning {
-            if self.start() {
-                asr::timer::start();
-            }
+        if asr::timer::state() == TimerState::NotRunning && self.start() {
+            asr::timer::start();
 
-            // TODO: run this even if the timer is started manually
-            if self.settings.death_counter {
-                self.death_count_offset = self.process.death_count.old;
-                asr::timer::set_variable_int(
-                    "Deaths",
-                    self.process.death_count.current - self.death_count_offset,
-                );
+            if asr::timer::state() == TimerState::Running {
+                // TODO: run this even if the timer is started manually
+                if self.settings.death_counter {
+                    self.death_count_offset = self.process.death_count.old;
+                    asr::timer::set_variable_int(
+                        "Deaths",
+                        self.process.death_count.current - self.death_count_offset,
+                    );
+                }
             }
         }
     }
