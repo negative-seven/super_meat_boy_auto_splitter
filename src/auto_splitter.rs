@@ -8,6 +8,7 @@ use core::f32;
 pub(crate) struct AutoSplitter<'settings> {
     process: SmbProcess,
     settings: &'settings mut Settings,
+    timer_previous_state: TimerState,
     level_time: f32,
     death_count_offset: i32,
 }
@@ -21,6 +22,7 @@ impl<'settings> AutoSplitter<'settings> {
             settings,
             level_time: f32::NAN,
             death_count_offset: 0,
+            timer_previous_state: TimerState::Unknown,
         };
         this.init();
         this
@@ -54,15 +56,16 @@ impl<'settings> AutoSplitter<'settings> {
 
             if asr::timer::state() == TimerState::Running {
                 // TODO: run this even if the timer is started manually
-                if self.settings.death_counter {
-                    self.death_count_offset = self.process.death_count.old;
-                    asr::timer::set_variable_int(
-                        "Deaths",
-                        self.process.death_count.current - self.death_count_offset,
-                    );
-                }
             }
         }
+
+        if self.timer_previous_state == TimerState::NotRunning
+            && asr::timer::state() == TimerState::Running
+        {
+            self.on_start();
+        }
+
+        self.timer_previous_state = asr::timer::state();
     }
 
     fn init(&mut self) {
@@ -244,6 +247,16 @@ impl<'settings> AutoSplitter<'settings> {
         }
 
         false
+    }
+
+    fn on_start(&mut self) {
+        if self.settings.death_counter {
+            self.death_count_offset = self.process.death_count.old;
+            asr::timer::set_variable_int(
+                "Deaths",
+                self.process.death_count.current - self.death_count_offset,
+            );
+        }
     }
 
     fn is_death_counter_active(&self) -> bool {
