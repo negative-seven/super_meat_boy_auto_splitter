@@ -82,12 +82,7 @@ async fn inner_main() -> Result<(), Error> {
     let mut settings = Settings::register();
 
     loop {
-        let process = loop {
-            if let Some(process) = SmbProcess::try_attach() {
-                break process;
-            }
-            next_tick().await;
-        };
+        let process = asr::future::retry(SmbProcess::try_attach).await;
 
         let mut auto_splitter = AutoSplitter::new(process, &mut settings);
         while auto_splitter.is_process_running() {

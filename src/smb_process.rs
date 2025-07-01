@@ -21,16 +21,19 @@ pub(crate) struct SmbProcess {
 
 impl SmbProcess {
     pub(crate) fn try_attach() -> Option<Self> {
-        let process =
-            Process::attach("SuperMeatBoy.exe").or_else(|| Process::attach("SuperMeatBoy"))?;
+        let (process_name, process) =
+            ["SuperMeatBoy.exe", "SuperMeatBoy"]
+                .into_iter()
+                .find_map(|name| {
+                    let process = Process::attach(name)?;
+                    Some((name, process))
+                })?;
 
-        let main_module_size = process
-            .get_module_size("SuperMeatBoy.exe")
-            .or_else(|_| process.get_module_size("SuperMeatBoy"));
+        let main_module_size = process.get_module_size(process_name).ok()?;
         let pointer_paths = match main_module_size {
-            Ok(0x34_2000) => PointerPaths::og_version(&process),
-            Ok(0x33_c000) => PointerPaths::v125(&process),
-            Ok(0x21_9000) => PointerPaths::linux_amd64(&process),
+            0x34_2000 => PointerPaths::windows_og(&process),
+            0x33_c000 => PointerPaths::windows_1_2_5(&process),
+            0x21_9000 => PointerPaths::linux_amd64(&process),
             _ => return None,
         }
         .unwrap();
@@ -126,7 +129,7 @@ struct PointerPaths {
 }
 
 impl PointerPaths {
-    pub(crate) fn og_version(process: &Process) -> Result<Self, Error> {
+    pub(crate) fn windows_og(process: &Process) -> Result<Self, Error> {
         let main_module_address = process.get_module_address("SuperMeatBoy.exe")?;
         Ok(Self {
             playing: DeepPointer::new(main_module_address, PointerSize::Bit32, &[0x1b_6638]),
@@ -173,7 +176,7 @@ impl PointerPaths {
         })
     }
 
-    pub(crate) fn v125(process: &Process) -> Result<Self, Error> {
+    pub(crate) fn windows_1_2_5(process: &Process) -> Result<Self, Error> {
         let main_module_address = process.get_module_address("SuperMeatBoy.exe")?;
         Ok(Self {
             playing: DeepPointer::new(main_module_address, PointerSize::Bit32, &[0x30_a1c8]),
